@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Highlight Ab/bA Custom Length</title>
+    <title>Highlight Ab/bA - Local Storage Only</title>
     <style>
         /* Dark Mode & Căn lề chuẩn: Trên 20px, 2 biên 3px */
         body { 
@@ -150,10 +150,10 @@
         }
         output.innerHTML = resultHTML;
         
-        // Tự động lưu cả văn bản và cấu hình độ dài
+        // Tự động lưu văn bản và cấu hình độ dài vào LocalStorage
         localStorage.setItem('autoSavedDataV6', text);
         localStorage.setItem('savedMinLength', minLen);
-        showStatus("Đã lưu...");
+        showStatus("Đã tự động lưu...");
     }
 
     function showStatus(msg) {
@@ -168,8 +168,10 @@
         }
     }
 
+    // Lắng nghe sự kiện gõ phím trực tiếp
     inputEl.addEventListener('input', processText);
 
+    // Tự động khôi phục dữ liệu khi load lại trang
     window.onload = function() {
         const savedText = localStorage.getItem('autoSavedDataV6');
         const savedLen = localStorage.getItem('savedMinLength');
@@ -181,6 +183,7 @@
         }
     };
 
+    // Đọc file .txt
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -192,6 +195,7 @@
         reader.readAsText(file);
     });
 
+    // Tải nội dung textarea về máy
     function downloadFile() {
         const blob = new Blob([inputEl.value], { type: 'text/plain' });
         const link = document.createElement('a');
@@ -202,4 +206,4 @@
 </script>
 
 </body>
-</html>s
+</html>
