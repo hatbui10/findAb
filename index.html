@@ -1,296 +1,167 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Matrix 3x3 1%  3%  9%   27%   81%</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlight AbAb >= 4 Chars</title>
+    <style>
+        /* Dark Mode & Căn lề: Trên 20px, 2 biên 3px */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #121212; 
+            color: #e0e0e0; 
+            margin: 20px 3px 0 3px; 
+            padding: 0;
+        }
 
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        /* Nền tối sâu cho toàn bộ trang */
-        background: linear-gradient(135deg, #050509, #1a1625, #0a0a0f);
-        color: white;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 100vh; /* Căn giữa theo chiều dọc trang */
-        margin: 20px;
-        padding: 20px;
-    }
+        .container { max-width: 100%; margin: 0 auto; }
 
-    /* Chiếc hộp chứa toàn bộ nội dung */
-    .main-container {
-        background: rgba(20, 20, 30, 0.6); /* Nền hộp hơi tối */
-        padding: 50px 60px;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.05); /* Viền mờ */
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); /* Đổ bóng cho hộp */
-        backdrop-filter: blur(10px); /* Hiệu ứng làm mờ nền phía sau hộp */
-    }
+        textarea { 
+            width: 100%; height: 180px; margin-bottom: 10px; padding: 12px; 
+            border-radius: 8px; border: 1px solid #333; 
+            background-color: #1e1e1e; color: #ffffff;
+            box-sizing: border-box; font-size: 16px; outline: none;
+        }
+        textarea:focus { border-color: #bb86fc; }
 
-    h2 { 
-        margin-top: 0;
-        margin-bottom: 25px; 
-        text-transform: uppercase; 
-        letter-spacing: 3px; 
-        color: rgba(255, 255, 255, 0.9);
-    }
+        .controls { margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-    /* Đồng hồ đếm ngược */
-    #timer-display {
-        font-size: 60px;
-        font-weight: bold;
-        color: #00f2fe;
-        margin-bottom: 15px;
-        text-shadow: 0 0 20px rgba(0, 242, 254, 0.8);
-    }
+        #output { 
+            background: #1e1e1e; padding: 15px; border: 1px solid #444; 
+            border-radius: 8px; min-height: 120px; 
+            white-space: pre-wrap; word-wrap: break-word; color: #cfcfcf;
+            font-size: 18px; letter-spacing: 2px; line-height: 2;
+        }
 
-    /* Nút Random chính */
-    .btn-random {
-        padding: 18px 60px;
-        font-size: 22px;
-        font-weight: bold;
-        color: yellow;
-        background: linear-gradient(45deg, #ff0000, #4facfe);
-        border: none;
-        border-radius: 50px;
-        cursor: pointer;
-        box-shadow: 0 0 25px rgba(127, 0, 255, 0.5);
-        transition: 0.3s;
-        margin-bottom: 50px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+        /* Màu sắc: Vàng cho Ab, Xanh cho bA */
+        .mark-Ab { background-color: #ffff00; color: #000; font-weight: bold; padding: 2px 0; }
+        .mark-bA { background-color: #00bfff; color: #000; font-weight: bold; padding: 2px 0; }
 
-    .btn-random:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 35px #00f2fe;
-    }
+        button, .file-label { 
+            padding: 10px 15px; cursor: pointer; border: none; 
+            border-radius: 6px; background: #3700b3; color: white; 
+            font-weight: bold; font-size: 13px;
+        }
+        button:hover, .file-label:hover { background: #6200ee; }
+        
+        .btn-download { background: #cf6679; }
+        
+        #status { font-size: 12px; color: #03dac6; margin-left: 10px; }
 
-    .btn-random:active { transform: scale(0.95); }
-
-    /* Lưới ma trận 3x3 */
-    .matrix {
-        display: grid;
-        grid-template-columns: repeat(3, 95px); 
-        grid-template-rows: repeat(3, 95px);    
-        gap: 15px;
-        justify-content: center;
-    }
-
-    .cell {
-        height: 95px;
-        width: 95px;
-        border-radius: 20px;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 50px;
-        font-weight: bold;
-        /* Nền phím tối hơn để nổi bật chữ */
-        background: rgba(0, 0, 0, 0.3); 
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(5px);
-        transition: 0.3s;
-    }
-
-    /* Số nhỏ cố định phía trên (1-9) */
-    .cell-number {
-        position: absolute;
-        top: 2px;
-        left: 5px;
-        font-size: 25px;
-        color: rgba(255, 255, 0, 0.8); /* Màu vàng mờ */
-        font-weight: normal;
-    }
-
-    /* Nội dung A hoặc b */
-    .cell-content {
-        /* Màu mặc định là trắng mờ */
-        color: rgba(255, 255, 255, 0.3);
-        text-shadow: none;
-        transition: 0.3s ease;
-    }
-
-    /* Hiệu ứng khi đang chạy random */
-    .spinning {
-        border-color: #00f2fe;
-        box-shadow: 0 0 25px rgba(0, 242, 254, 0.6);
-        animation: pulse 0.1s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.03); }
-        100% { transform: scale(1); }
-    }
-</style>
+        input[type="file"] { display: none; }
+        .legend { margin-bottom: 10px; font-size: 13px; opacity: 0.8; }
+        .dot { height: 10px; width: 10px; display: inline-block; border-radius: 50%; margin-right: 5px; }
+    </style>
 </head>
-
 <body>
 
-    <div class="main-container">
-        <h2>Matrix 3x3 </h2>
-        <h2>Phạm vi mục tiêu </h2>
-        <h2> 1% - 3% - 9% - 27% - 81%</h2>
+<div class="container">
+    <h2 style="color: #bb86fc; margin-bottom: 5px;">Lọc xen kẽ (Độ dài &ge; 4)</h2>
+    <div class="legend">
+        <span><span class="dot" style="background: #ffff00;"></span>Ab (Bắt đầu Lớn)</span> | 
+        <span><span class="dot" style="background: #00bfff;"></span>bA (Bắt đầu Bé)</span> |
+        <strong>Yêu cầu: Độ dài &ge; 4 ký tự</strong>
+    </div>
+    
+    <textarea id="inputText" placeholder="Dán dãy số vào đây..."></textarea>
 
-        <div id="timer-display">05:00</div>
-
-        <button class="btn-random" id="mainButton" onclick="handleButtonClick()">BẮT ĐẦU</button>
-
-        <div class="matrix" id="matrix">
-            </div>
+    <div class="controls">
+        <label class="file-label">Mở file .txt <input type="file" id="fileInput" accept=".txt"></label>
+        <button class="btn-download" onclick="downloadFile()">Tải file</button>
+        <span id="status"></span>
     </div>
 
-    <audio id="spinSound" preload="auto">
-        <source src="https://www.soundjay.com/misc/sounds/button-37.mp3" type="audio/mpeg">
-    </audio>
+    <div id="output"></div>
+</div>
 
 <script>
-    const matrixContainer = document.getElementById("matrix");
-    const spinSound = document.getElementById("spinSound");
-    const timerDisplay = document.getElementById("timer-display");
-    const mainButton = document.getElementById("mainButton");
-    const cellDisplays = [];
+    const inputEl = document.getElementById('inputText');
+    const statusText = document.getElementById('status');
 
-    let timeLeft = 300; // 300 giây
-    let timerInterval = null;
-    let isStarted = false;
-
-    // Tạo ma trận 3x3 (9 ô, đánh số từ 1-9)
-    for (let i = 1; i <= 9; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        
-        const numLabel = document.createElement("span");
-        numLabel.className = "cell-number";
-        numLabel.textContent = i;
-        
-        const content = document.createElement("span");
-        content.className = "cell-content";
-        content.textContent = "?"; 
-        
-        cell.appendChild(numLabel);
-        cell.appendChild(content);
-        matrixContainer.appendChild(cell);
-        
-        cellDisplays.push({
-            container: cell,
-            text: content
-        });
+    function getType(char) {
+        if (!/[0-9]/.test(char)) return null;
+        return parseInt(char) >= 5 ? 'A' : 'b';
     }
 
-    // Hàm xáo trộn mảng để vị trí ngẫu nhiên
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
+    function processText() {
+        const text = inputEl.value;
+        const output = document.getElementById('output');
+        let resultHTML = "";
+        let i = 0;
 
-    // Hàm xử lý khi bấm nút lần đầu tiên
-    function handleButtonClick() {
-        if (!isStarted) {
-            isStarted = true;
-            
-            // 1. Chạy Random ngay lập tức lần đầu
-            rollMatrix();
-            
-            // 2. Bắt đầu đếm ngược
-            startCountdown();
-            
-            // 3. Cập nhật giao diện nút bấm
-            mainButton.textContent = "HỆ THỐNG ĐANG CHẠY";
-            mainButton.disabled = true;
-            mainButton.style.opacity = "0.5";
-            mainButton.style.cursor = "default";
-            mainButton.style.transform = "scale(1)";
-        }
-    }
+        while (i < text.length) {
+            let currentType = getType(text[i]);
 
-    // Hàm bắt đầu đếm ngược 300s
-    function startCountdown() {
-        if (timerInterval) clearInterval(timerInterval);
-        
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            
-            if (timeLeft < 0) {
-                // Khi hết thời gian: Thực hiện Random vòng mới
-                rollMatrix();
-                // Reset thời gian về 300s
-                timeLeft = 300;
+            if (currentType === null) {
+                resultHTML += text[i];
+                i++;
+                continue;
             }
-            
-            updateTimerDisplay();
-        }, 1000);
+
+            let startType = currentType;
+            let j = i;
+            let tempMatch = text[i];
+            let lastType = currentType;
+
+            // Quét chuỗi xen kẽ tối đa có thể
+            while (j + 1 < text.length) {
+                let nextType = getType(text[j + 1]);
+                if (nextType === null || nextType === lastType) break;
+                tempMatch += text[j + 1];
+                lastType = nextType;
+                j++;
+            }
+
+            // CHỈ TÔ MÀU NẾU ĐỘ DÀI >= 4
+            if (tempMatch.length >= 4) {
+                let className = (startType === 'A') ? 'mark-Ab' : 'mark-bA';
+                resultHTML += `<span class="${className}">${tempMatch}</span>`;
+                i = j + 1;
+            } else {
+                // Nếu ngắn hơn 4, giữ nguyên text bình thường và nhảy 1 ký tự để xét tiếp
+                resultHTML += text[i];
+                i++;
+            }
+        }
+        output.innerHTML = resultHTML;
+        
+        // Tự động lưu
+        localStorage.setItem('autoSavedDataV5', text);
+        showStatus("Đã lưu...");
     }
 
-    // Cập nhật hiển thị đồng hồ dạng MM:SS
-    function updateTimerDisplay() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        timerDisplay.textContent = 
-            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    function showStatus(msg) {
+        statusText.innerText = msg;
+        setTimeout(() => { statusText.innerText = ""; }, 1500);
     }
 
-    // Hàm thực hiện hiệu ứng quay và gán kết quả
-    function rollMatrix() {
-        // Phát âm thanh
-        spinSound.currentTime = 0;
-        spinSound.play().catch(() => {});
+    inputEl.addEventListener('input', processText);
 
-        // Logic khống chế: Tạo mảng chứa tối đa 6A hoặc 6b
-        // Random số lượng A từ 3 đến 6 (Để b cũng tự động từ 3 đến 6)
-        const countA = Math.floor(Math.random() * 4) + 3; 
-        const countB = 9 - countA;
-        
-        let finalResults = [];
-        for(let i=0; i<countA; i++) finalResults.push("A");
-        for(let i=0; i<countB; i++) finalResults.push("b");
-        
-        // Trộn vị trí
-        shuffleArray(finalResults);
+    window.onload = function() {
+        const saved = localStorage.getItem('autoSavedDataV5');
+        if (saved) {
+            inputEl.value = saved;
+            processText();
+        }
+    };
 
-        cellDisplays.forEach((item, index) => {
-            let iterations = 0;
-            // Số lần nhảy chữ trước khi dừng
-            const maxIterations = 20 + Math.floor(Math.random() * 10); 
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            inputEl.value = e.target.result;
+            processText();
+        };
+        reader.readAsText(file);
+    });
 
-            // Thêm hiệu ứng quay cho ô
-            item.container.classList.add("spinning");
-            // Reset màu chữ mặc định khi bắt đầu quay
-            item.text.style.color = "rgba(255, 255, 255, 0.3)";
-            item.text.style.textShadow = "none";
-
-            const interval = setInterval(() => {
-                // Hiệu ứng nhảy chữ ngẫu nhiên lúc đang quay
-                item.text.textContent = Math.random() > 0.5 ? "A" : "b";
-                iterations++;
-
-                if (iterations >= maxIterations) {
-                    clearInterval(interval);
-                    // Xóa hiệu ứng quay
-                    item.container.classList.remove("spinning");
-                    
-                    // Gán kết quả thực tế từ mảng đã khống chế
-                    const finalChar = finalResults[index];
-                    item.text.textContent = finalChar;
-                    
-                    // Đổi màu và hiệu ứng bóng đổ theo chữ cái cuối cùng
-                    if(finalChar === "A") {
-                        item.text.style.color = "#00ffff"; // Xanh Cyan neon
-                        item.text.style.textShadow = "0 0 15px #00ffff, 0 0 25px #00ffff";
-                    } else {
-                        item.text.style.color = "#ff00ff"; // Hồng neon
-                        item.text.style.textShadow = "0 0 15px #ff00ff, 0 0 25px #ff00ff";
-                    }
-                }
-            }, 50); // Tốc độ nhảy chữ (50ms)
-        });
+    function downloadFile() {
+        const blob = new Blob([inputEl.value], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "data_xenke_4.txt";
+        link.click();
     }
 </script>
 
