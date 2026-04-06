@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Highlight Ab/bA - Local Storage Only</title>
+    <title>Highlight Ab/bA - Fixed Status</title>
     <style>
-        /* Dark Mode & Căn lề chuẩn: Trên 20px, 2 biên 3px */
+        /* Dark Mode & Căn lề: Trên 20px, 2 biên 3px */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #121212; 
@@ -16,7 +16,22 @@
 
         .container { max-width: 100%; margin: 0 auto; }
 
-        /* Ô nhập độ dài và các điều khiển */
+        /* Thông báo cố định ở góc trên bên phải */
+        #file-info-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #2c2c2c;
+            color: #03dac6;
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: 1px solid #03dac6;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
         .config-bar {
             background: #1e1e1e;
             padding: 10px;
@@ -56,7 +71,6 @@
             font-size: 18px; letter-spacing: 2px; line-height: 2;
         }
 
-        /* Màu sắc chuẩn: Vàng (Ab), Xanh (bA) */
         .mark-Ab { background-color: #ffff00; color: #000; font-weight: bold; padding: 2px 0; }
         .mark-bA { background-color: #00bfff; color: #000; font-weight: bold; padding: 2px 0; }
 
@@ -67,7 +81,6 @@
         }
         
         .btn-download { background: #cf6679; }
-        #status { font-size: 12px; color: #03dac6; margin-left: auto; }
 
         input[type="file"] { display: none; }
         .legend { font-size: 13px; opacity: 0.9; display: flex; gap: 10px; }
@@ -76,19 +89,20 @@
 </head>
 <body>
 
+<div id="file-info-badge">Trạng thái: Chưa có dữ liệu</div>
+
 <div class="container">
     <div class="config-bar">
-        <label for="minLength">Độ dài lọc tối thiểu: </label>
+        <label for="minLength">Độ dài lọc ≥ </label>
         <input type="number" id="minLength" value="4" min="2" oninput="processText()">
         
         <div class="legend">
-            <span><span class="dot" style="background: #ffff00;"></span>Ab (Lớn-Bé)</span>
-            <span><span class="dot" style="background: #00bfff;"></span>bA (Bé-Lớn)</span>
+            <span><span class="dot" style="background: #ffff00;"></span>Ab</span>
+            <span><span class="dot" style="background: #00bfff;"></span>bA</span>
         </div>
-        <span id="status"></span>
     </div>
     
-    <textarea id="inputText" placeholder="Dán dãy số vào đây..."></textarea>
+    <textarea id="inputText" placeholder="Dán dãy số hoặc mở file..."></textarea>
 
     <div class="controls">
         <label class="file-label">Mở file .txt <input type="file" id="fileInput" accept=".txt"></label>
@@ -102,11 +116,26 @@
 <script>
     const inputEl = document.getElementById('inputText');
     const minLengthEl = document.getElementById('minLength');
-    const statusText = document.getElementById('status');
+    const infoBadge = document.getElementById('file-info-badge');
 
     function getType(char) {
         if (!/[0-9]/.test(char)) return null;
         return parseInt(char) >= 5 ? 'A' : 'b';
+    }
+
+    // Cập nhật thông báo số lượng ký tự
+    function updateBadge(text) {
+        // Chỉ đếm các con số, bỏ qua khoảng trắng/xuống dòng nếu muốn đếm chính xác số lượng dữ liệu
+        const count = text.replace(/\s/g, '').length; 
+        if (count > 0) {
+            infoBadge.innerHTML = `Đã tải file: ${count.toLocaleString()} số`;
+            infoBadge.style.color = "#03dac6";
+            infoBadge.style.borderColor = "#03dac6";
+        } else {
+            infoBadge.innerHTML = `Trạng thái: Trống`;
+            infoBadge.style.color = "#888";
+            infoBadge.style.borderColor = "#444";
+        }
     }
 
     function processText() {
@@ -116,9 +145,11 @@
         let resultHTML = "";
         let i = 0;
 
+        // Cập nhật badge
+        updateBadge(text);
+
         while (i < text.length) {
             let currentType = getType(text[i]);
-
             if (currentType === null) {
                 resultHTML += text[i];
                 i++;
@@ -138,7 +169,6 @@
                 j++;
             }
 
-            // Kiểm tra độ dài theo ô nhập liệu
             if (tempMatch.length >= minLen) {
                 let className = (startType === 'A') ? 'mark-Ab' : 'mark-bA';
                 resultHTML += `<span class="${className}">${tempMatch}</span>`;
@@ -150,28 +180,20 @@
         }
         output.innerHTML = resultHTML;
         
-        // Tự động lưu văn bản và cấu hình độ dài vào LocalStorage
         localStorage.setItem('autoSavedDataV6', text);
         localStorage.setItem('savedMinLength', minLen);
-        showStatus("Đã tự động lưu...");
-    }
-
-    function showStatus(msg) {
-        statusText.innerText = msg;
-        setTimeout(() => { statusText.innerText = ""; }, 1000);
     }
 
     function clearData() {
-        if(confirm("Bạn có chắc muốn xóa hết dữ liệu?")) {
+        if(confirm("Xóa toàn bộ dữ liệu?")) {
             inputEl.value = "";
+            localStorage.removeItem('autoSavedDataV6');
             processText();
         }
     }
 
-    // Lắng nghe sự kiện gõ phím trực tiếp
     inputEl.addEventListener('input', processText);
 
-    // Tự động khôi phục dữ liệu khi load lại trang
     window.onload = function() {
         const savedText = localStorage.getItem('autoSavedDataV6');
         const savedLen = localStorage.getItem('savedMinLength');
@@ -183,7 +205,6 @@
         }
     };
 
-    // Đọc file .txt
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -195,12 +216,11 @@
         reader.readAsText(file);
     });
 
-    // Tải nội dung textarea về máy
     function downloadFile() {
         const blob = new Blob([inputEl.value], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = "data_loc_so.txt";
+        link.download = "data_save.txt";
         link.click();
     }
 </script>
