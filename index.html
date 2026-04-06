@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Highlight AbAb >= 4 Chars</title>
+    <title>Highlight Ab/bA Custom Length</title>
     <style>
-        /* Dark Mode & Căn lề: Trên 20px, 2 biên 3px */
+        /* Dark Mode & Căn lề chuẩn: Trên 20px, 2 biên 3px */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #121212; 
@@ -15,6 +15,29 @@
         }
 
         .container { max-width: 100%; margin: 0 auto; }
+
+        /* Ô nhập độ dài và các điều khiển */
+        .config-bar {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #333;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #bb86fc;
+            background: #2c2c2c;
+            color: #fff;
+            text-align: center;
+            font-weight: bold;
+        }
 
         textarea { 
             width: 100%; height: 180px; margin-bottom: 10px; padding: 12px; 
@@ -33,34 +56,36 @@
             font-size: 18px; letter-spacing: 2px; line-height: 2;
         }
 
-        /* Màu sắc: Vàng cho Ab, Xanh cho bA */
+        /* Màu sắc chuẩn: Vàng (Ab), Xanh (bA) */
         .mark-Ab { background-color: #ffff00; color: #000; font-weight: bold; padding: 2px 0; }
         .mark-bA { background-color: #00bfff; color: #000; font-weight: bold; padding: 2px 0; }
 
         button, .file-label { 
-            padding: 10px 15px; cursor: pointer; border: none; 
+            padding: 8px 15px; cursor: pointer; border: none; 
             border-radius: 6px; background: #3700b3; color: white; 
             font-weight: bold; font-size: 13px;
         }
-        button:hover, .file-label:hover { background: #6200ee; }
         
         .btn-download { background: #cf6679; }
-        
-        #status { font-size: 12px; color: #03dac6; margin-left: 10px; }
+        #status { font-size: 12px; color: #03dac6; margin-left: auto; }
 
         input[type="file"] { display: none; }
-        .legend { margin-bottom: 10px; font-size: 13px; opacity: 0.8; }
+        .legend { font-size: 13px; opacity: 0.9; display: flex; gap: 10px; }
         .dot { height: 10px; width: 10px; display: inline-block; border-radius: 50%; margin-right: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: #bb86fc; margin-bottom: 5px;">Lọc xen kẽ (Độ dài &ge; 4)</h2>
-    <div class="legend">
-        <span><span class="dot" style="background: #ffff00;"></span>Ab (Bắt đầu Lớn)</span> | 
-        <span><span class="dot" style="background: #00bfff;"></span>bA (Bắt đầu Bé)</span> |
-        <strong>Yêu cầu: Độ dài &ge; 4 ký tự</strong>
+    <div class="config-bar">
+        <label for="minLength">Độ dài lọc tối thiểu: </label>
+        <input type="number" id="minLength" value="4" min="2" oninput="processText()">
+        
+        <div class="legend">
+            <span><span class="dot" style="background: #ffff00;"></span>Ab (Lớn-Bé)</span>
+            <span><span class="dot" style="background: #00bfff;"></span>bA (Bé-Lớn)</span>
+        </div>
+        <span id="status"></span>
     </div>
     
     <textarea id="inputText" placeholder="Dán dãy số vào đây..."></textarea>
@@ -68,7 +93,7 @@
     <div class="controls">
         <label class="file-label">Mở file .txt <input type="file" id="fileInput" accept=".txt"></label>
         <button class="btn-download" onclick="downloadFile()">Tải file</button>
-        <span id="status"></span>
+        <button onclick="clearData()" style="background: #444;">Xóa hết</button>
     </div>
 
     <div id="output"></div>
@@ -76,6 +101,7 @@
 
 <script>
     const inputEl = document.getElementById('inputText');
+    const minLengthEl = document.getElementById('minLength');
     const statusText = document.getElementById('status');
 
     function getType(char) {
@@ -86,6 +112,7 @@
     function processText() {
         const text = inputEl.value;
         const output = document.getElementById('output');
+        const minLen = parseInt(minLengthEl.value) || 4;
         let resultHTML = "";
         let i = 0;
 
@@ -103,7 +130,6 @@
             let tempMatch = text[i];
             let lastType = currentType;
 
-            // Quét chuỗi xen kẽ tối đa có thể
             while (j + 1 < text.length) {
                 let nextType = getType(text[j + 1]);
                 if (nextType === null || nextType === lastType) break;
@@ -112,35 +138,45 @@
                 j++;
             }
 
-            // CHỈ TÔ MÀU NẾU ĐỘ DÀI >= 4
-            if (tempMatch.length >= 4) {
+            // Kiểm tra độ dài theo ô nhập liệu
+            if (tempMatch.length >= minLen) {
                 let className = (startType === 'A') ? 'mark-Ab' : 'mark-bA';
                 resultHTML += `<span class="${className}">${tempMatch}</span>`;
                 i = j + 1;
             } else {
-                // Nếu ngắn hơn 4, giữ nguyên text bình thường và nhảy 1 ký tự để xét tiếp
                 resultHTML += text[i];
                 i++;
             }
         }
         output.innerHTML = resultHTML;
         
-        // Tự động lưu
-        localStorage.setItem('autoSavedDataV5', text);
+        // Tự động lưu cả văn bản và cấu hình độ dài
+        localStorage.setItem('autoSavedDataV6', text);
+        localStorage.setItem('savedMinLength', minLen);
         showStatus("Đã lưu...");
     }
 
     function showStatus(msg) {
         statusText.innerText = msg;
-        setTimeout(() => { statusText.innerText = ""; }, 1500);
+        setTimeout(() => { statusText.innerText = ""; }, 1000);
+    }
+
+    function clearData() {
+        if(confirm("Bạn có chắc muốn xóa hết dữ liệu?")) {
+            inputEl.value = "";
+            processText();
+        }
     }
 
     inputEl.addEventListener('input', processText);
 
     window.onload = function() {
-        const saved = localStorage.getItem('autoSavedDataV5');
-        if (saved) {
-            inputEl.value = saved;
+        const savedText = localStorage.getItem('autoSavedDataV6');
+        const savedLen = localStorage.getItem('savedMinLength');
+        
+        if (savedLen) minLengthEl.value = savedLen;
+        if (savedText) {
+            inputEl.value = savedText;
             processText();
         }
     };
@@ -160,10 +196,10 @@
         const blob = new Blob([inputEl.value], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = "data_xenke_4.txt";
+        link.download = "data_loc_so.txt";
         link.click();
     }
 </script>
 
 </body>
-</html>
+</html>s
