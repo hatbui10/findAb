@@ -3,262 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Analysis - Final Optimized</title>
+    <title>Số Hóa Dữ Liệu - Grid View</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background-color: #121212; color: #e0e0e0; 
-            margin: 20px 10px; padding: 0;
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --container-bg: #ffffff;
+            --border-color: #ddd;
+            --cell-bg: #fff;
+            --primary-color: #4a90e2;
         }
 
-        .config-bar {
-            background: #1e1e1e; padding: 15px;
-            border-radius: 8px; margin-bottom: 15px;
-            display: flex; align-items: center; gap: 12px;
-            border: 1px solid #333; flex-wrap: wrap;
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --container-bg: #2d2d2d;
+            --border-color: #444;
+            --cell-bg: #3d3d3d;
         }
 
-        .search-box {
-            background: #1a1a1a; padding: 15px; border-radius: 8px;
-            margin-bottom: 15px; border: 1px solid #03dac6;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: all 0.3s ease;
         }
 
-        #searchQuery {
-            padding: 8px; width: 200px; border-radius: 4px; border: 1px solid #03dac6;
-            background: #121212; color: #fff; font-size: 16px; margin-bottom: 10px;
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--container-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .search-item {
-            display: block; padding: 8px; color: #03dac6; cursor: pointer;
-            text-decoration: none; font-size: 14px; border-bottom: 1px solid #333;
-        }
-        .search-item:hover { background: #252525; color: #fff; }
+        h2 { text-align: center; margin-top: 0; }
 
-        .output-panel { 
-            height: calc(100vh - 450px); padding: 15px; border-radius: 8px; 
-            border: 1px solid #444; background: #181818; 
-            color: #fff; font-size: 19px; overflow-y: auto;
-            word-break: break-all; white-space: pre-wrap;
-            line-height: 2.5; letter-spacing: 2px;
-            scroll-behavior: smooth;
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            border-bottom: 2px solid var(--border-color);
+            align-items: center;
         }
 
-        /* MÀU TRA CỨU */
-        .highlight-origin { background-color: #ff0000 !important; color: #fff !important; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
-        .highlight-follow { background-color: #ff9800 !important; color: #000 !important; font-weight: bold; padding: 2px 2px; border-radius: 2px; margin: 0 1px; }
-        .highlight-stop { background-color: #e91e63 !important; color: #fff !important; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 2px solid #fff; box-shadow: 0 0 10px #e91e63; }
+        .control-group { display: flex; align-items: center; gap: 8px; }
 
-        /* MÀU PHÂN LOẠI */
-        .mark-AA { background-color: #ff4444; color: #fff; }
-        .mark-bb { background-color: #4444ff; color: #fff; }
-        .mark-Ab { background-color: #ffff00; color: #000; }
-        .mark-bA { background-color: #00ff00; color: #000; }
-        
-        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
-        #inputText { display: none; }
-        .output-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input[type="number"], input[type="file"] {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--cell-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+
+        /* Grid System */
+        #numberGrid {
+            display: grid;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            background: var(--cell-bg);
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .theme-toggle { margin-left: auto; }
     </style>
 </head>
 <body>
 
-<div class="search-box">
-    <label>🔍 TRA CỨU: <small>(Đỏ: Gốc | Cam: Cụm lẻ | <b>Hồng Tím: Điểm dừng ≥ 3</b>)</small></label><br>
-    <input type="text" id="searchQuery" placeholder="Nhập số..." oninput="analyzeAndDisplay()">
-    <div id="searchResult"></div>
-</div>
+<div class="container">
+    <h2>Trình Hiển Thị Số Theo Nhóm</h2>
 
-<div class="config-bar">
-    <label>Độ dài ≥</label>
-    <input type="number" id="minLength" value="3" min="2" style="width:50px; background:#2c2c2c; color:#fff; border:1px solid #444;">
-    
-    <div style="display: flex; gap: 6px;">
-        <button style="background:#ff4444;color:#fff" onclick="process('AA')">AA</button>
-        <button style="background:#4444ff;color:#fff" onclick="process('bb')">bb</button>
-        <button style="background:#ffff00;color:#000" onclick="process('Ab')">Ab</button>
-        <button style="background:#00ff00;color:#000" onclick="process('bA')">bA</button>
-        <button style="background:#fff; color:#000" onclick="resetToRaw()">🔄 RESET</button>
+    <div class="controls">
+        <div class="control-group">
+            <label>Upload File:</label>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+
+        <div class="control-group">
+            <label>Số ô mỗi nhóm:</label>
+            <input type="number" id="groupSize" value="10" min="1" style="width: 60px;">
+        </div>
+
+        <button onclick="clearData()" style="background: #e74c3c;">Xóa dữ liệu</button>
+
+        <div class="theme-toggle">
+            <button onclick="toggleDarkMode()">Chế độ Sáng/Tối</button>
+        </div>
     </div>
 
-    <div style="margin-left: auto;">
-        <label style="background: #3700b3; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
-            📁 CHỌN FILE <input type="file" id="fileInput" accept=".txt" style="display:none">
-        </label>
-        <button style="background:#444; color:#fff;" onclick="clearData()">🗑️ XÓA</button>
-    </div>
-</div>
-
-<textarea id="inputText"></textarea>
-
-<div class="output-container">
-    <div><div id="outHomo" class="output-panel"></div></div>
-    <div><div id="outAlt" class="output-panel"></div></div>
+    <div id="numberGrid"></div>
 </div>
 
 <script>
-    const inputEl = document.getElementById('inputText');
-    const outHomo = document.getElementById('outHomo');
-    const outAlt = document.getElementById('outAlt');
-    const searchQueryEl = document.getElementById('searchQuery');
-    const searchResultEl = document.getElementById('searchResult');
-    const STORAGE_KEY = 'saved_dual_tool_data';
+    const fileInput = document.getElementById('fileInput');
+    const groupSizeInput = document.getElementById('groupSize');
+    const numberGrid = document.getElementById('numberGrid');
+    let rawNumbers = "";
 
-    const isA = (c) => /[0-9]/.test(c) && parseInt(c) >= 5;
-
-    function getPatternType(str) {
-        if (str.length < 2) return null;
-        const fA = isA(str[0]), sA = isA(str[1]);
-        if (fA && sA) return "AA"; if (!fA && !sA) return "bb";
-        if (fA && !sA) return "Ab"; return "bA";
-    }
-
-    function getSequenceAt(text, k, type) {
-        let j = k;
-        let str = text[k] || "";
-        while (j + 1 < text.length) {
-            let currentIsA = isA(text[j]), nextIsA = isA(text[j+1]);
-            let m = false;
-            if (type === 'AA') m = currentIsA && nextIsA;
-            else if (type === 'bb') m = !currentIsA && !nextIsA;
-            else if (type === 'Ab') m = (currentIsA !== nextIsA) && isA(text[k]);
-            else if (type === 'bA') m = (currentIsA !== nextIsA) && !isA(text[k]);
-            
-            if (m) { str += text[j+1]; j++; } 
-            else break;
-        }
-        return str;
-    }
-
-    function analyzeAndDisplay() {
-        const query = searchQueryEl.value;
-        const text = inputEl.value.replace(/[^0-9]/g, '');
-        if (query.length < 2 || !text) { searchResultEl.innerHTML = ""; return; }
-
-        const qType = getPatternType(query);
-        let index = text.indexOf(query);
-        let html = "";
-        let count = 0;
-
-        while (index !== -1 && count < 50) {
-            let followIndices = [];
-            let stopInfo = null;
-            let k = index + query.length;
-
-            while (k < text.length) {
-                let seq = getSequenceAt(text, k, qType);
-                
-                if (seq.length >= 3) {
-                    stopInfo = { idx: k, val: seq };
-                    break; 
-                } 
-                else if (seq.length === 2 && getPatternType(seq) === qType) {
-                    followIndices.push(k);
-                    k += 2;
-                    continue;
-                }
-                k++; 
-            }
-
-            html += `<div class="search-item" onclick='drawHighlight(${index}, ${query.length}, ${JSON.stringify(followIndices)}, ${JSON.stringify(stopInfo)})'>
-                        📍 Vị trí ${index}: [${query}] -> ${followIndices.length} cụm cam. Dừng tại: ${stopInfo ? stopInfo.val : 'Hết dữ liệu'}
-                     </div>`;
-            
-            index = text.indexOf(query, index + 1);
-            count++;
-        }
-        searchResultEl.innerHTML = html || "Không tìm thấy.";
-    }
-
-    function drawHighlight(originIdx, originLen, followIndices, stopInfo) {
-        const text = inputEl.value.replace(/[^0-9]/g, '');
-        let resultHTML = "";
-        let lastIdx = 0;
-
-        resultHTML += text.substring(0, originIdx);
-        resultHTML += `<span id="target-scroll" class="highlight-origin">${text.substr(originIdx, originLen)}</span>`;
-        lastIdx = originIdx + originLen;
-
-        followIndices.forEach(idx => {
-            if (idx >= lastIdx) {
-                resultHTML += text.substring(lastIdx, idx);
-                resultHTML += `<span class="highlight-follow">${text.substr(idx, 2)}</span>`;
-                lastIdx = idx + 2;
-            }
-        });
-
-        if (stopInfo && stopInfo.idx >= lastIdx) {
-            resultHTML += text.substring(lastIdx, stopInfo.idx);
-            resultHTML += `<span class="highlight-stop">${stopInfo.val}</span>`;
-            lastIdx = stopInfo.idx + stopInfo.val.length;
+    // 1. Khởi tạo khi load trang
+    window.onload = () => {
+        // Load theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
         }
 
-        resultHTML += text.substring(lastIdx);
-        
-        outHomo.innerHTML = resultHTML;
-        outAlt.innerHTML = resultHTML;
+        // Load dữ liệu cũ
+        rawNumbers = localStorage.getItem('savedNumbers') || "";
+        const savedSize = localStorage.getItem('savedGroupSize');
+        if (savedSize) groupSizeInput.value = savedSize;
 
-        setTimeout(() => {
-            const target = document.getElementById('target-scroll');
-            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 50);
-    }
+        if (rawNumbers) renderGrid();
+    };
 
-    function resetToRaw() {
-        const raw = inputEl.value;
-        outHomo.innerText = raw;
-        outAlt.innerText = raw;
-        analyzeAndDisplay();
-    }
-
-    function process(type) {
-        const text = inputEl.value.replace(/[^0-9]/g, '');
-        const minLen = parseInt(document.getElementById('minLength').value) || 2;
-        let resultHTML = "";
-        let i = 0;
-        while (i < text.length) {
-            let j = i;
-            let temp = text[i];
-            while (j + 1 < text.length) {
-                let currentIsA = isA(text[j]), nextIsA = isA(text[j+1]);
-                let m = false;
-                if (type === 'AA') m = currentIsA && nextIsA;
-                else if (type === 'bb') m = !currentIsA && !nextIsA;
-                else if (type === 'Ab') m = (currentIsA !== nextIsA) && isA(text[i]);
-                else if (type === 'bA') m = (currentIsA !== nextIsA) && !isA(text[i]);
-                if (m) temp += text[++j]; else break;
-            }
-            if (temp.length >= minLen) {
-                resultHTML += `<span class="mark-${type}">${temp}</span>`;
-                i = j + 1;
-            } else { resultHTML += text[i++]; }
-        }
-        if (type === 'AA' || type === 'bb') outHomo.innerHTML = resultHTML;
-        else outAlt.innerHTML = resultHTML;
-    }
-
-    function clearData() {
-        if(confirm("Xóa hết?")) {
-            inputEl.value = ""; localStorage.removeItem(STORAGE_KEY);
-            outHomo.innerHTML = ""; outAlt.innerHTML = ""; searchResultEl.innerHTML = "";
-        }
-    }
-
-    document.getElementById('fileInput').addEventListener('change', (e) => {
+    // 2. Xử lý Upload File
+    fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                inputEl.value = ev.target.result;
-                localStorage.setItem(STORAGE_KEY, inputEl.value);
-                resetToRaw();
-            };
-            reader.readAsText(file);
-        }
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target.result;
+            // Chỉ lấy các chữ số 0-9
+            rawNumbers = content.replace(/\D/g, '');
+            localStorage.setItem('savedNumbers', rawNumbers);
+            renderGrid();
+        };
+        reader.readAsText(file);
     });
 
-    window.onload = () => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) { inputEl.value = saved; resetToRaw(); }
-    };
+    // 3. Xử lý thay đổi số ô mỗi nhóm
+    groupSizeInput.addEventListener('input', () => {
+        localStorage.setItem('savedGroupSize', groupSizeInput.value);
+        renderGrid();
+    });
+
+    // 4. Hàm Render chính
+    function renderGrid() {
+        numberGrid.innerHTML = "";
+        const size = parseInt(groupSizeInput.value) || 10;
+        
+        // Thiết lập số cột cho Grid
+        numberGrid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
+
+        const fragment = document.createDocumentFragment();
+        
+        for (let char of rawNumbers) {
+            const div = document.createElement('div');
+            div.className = 'cell';
+            div.textContent = char;
+            fragment.appendChild(div);
+        }
+        
+        numberGrid.appendChild(fragment);
+    }
+
+    // 5. Dark Mode
+    function toggleDarkMode() {
+        const currentTheme = document.body.getAttribute('data-theme');
+        if (currentTheme === 'dark') {
+            document.body.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    // 6. Xóa dữ liệu
+    function clearData() {
+        if (confirm("Bạn có chắc muốn xóa dữ liệu đã lưu?")) {
+            localStorage.removeItem('savedNumbers');
+            rawNumbers = "";
+            numberGrid.innerHTML = "";
+            fileInput.value = "";
+        }
+    }
 </script>
+
 </body>
 </html>
