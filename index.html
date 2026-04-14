@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phân Tích Số (A >= 5, b < 5)</title>
+    <title>Phân Tích Tổ Hợp 8 Trường Hợp</title>
     <style>
         :root {
-            
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --border-color: #333;
+            --cell-bg: #2d2d2d;
+            --label-bg: #252525;
+            --primary-color: #3498db;
+            --highlight-color: #f1c40f; 
+            --input-bg: #333;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f4f7f6;
             --text-color: #333;
-            
+            --container-bg: #fff;
             --border-color: #ddd;
             --cell-bg: #fff;
             --label-bg: #f8f9fa;
-            --primary-color: #4a90e2;
-            --highlight-color: #ffeb3b; 
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #1a1a1a;
-            --text-color: #f0f0f0;
-            --container-bg: #2d2d2d;
-            --border-color: #444;
-            --cell-bg: #3d3d3d;
-            --label-bg: #2c3e50;
+            --primary-color: #2980b9;
+            --input-bg: #fff;
         }
 
         body {
@@ -33,25 +36,58 @@
         }
 
         .container {
-            max-width: 700px;
+            max-width: 900px;
             margin: 0 auto;
             background: var(--container-bg);
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: var(--label-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .rule-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .rule-item label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .rule-item input {
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            
+            font-weight: bold;
         }
 
         .controls {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .grid-header {
             display: grid;
-            grid-template-columns: repeat(3, 45px) 30px repeat(3, 45px);
-            gap: 8px;
+            grid-template-columns: repeat(3, 50px) 30px repeat(3, 50px);
+            gap: 10px;
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
@@ -59,13 +95,13 @@
 
         #numberGrid {
             display: grid;
-            grid-template-columns: repeat(3, 45px) 30px repeat(3, 45px);
-            gap: 8px;
+            grid-template-columns: repeat(3, 50px) 30px repeat(3, 50px);
+            gap: 10px;
         }
 
         .cell {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -73,49 +109,61 @@
             background: var(--cell-bg);
             border-radius: 6px;
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 1.2em;
         }
 
         .cell.label {
             background-color: var(--label-bg);
-            color: #555;
+            color: var(--primary-color);
+            border-style: dashed;
         }
 
         .match-highlight {
             background-color: var(--highlight-color) !important;
             color: #000 !important;
-            border-color: #fbc02d !important;
+            border-color: #f39c12 !important;
         }
 
         .separator { width: 30px; }
 
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             cursor: pointer;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             background: var(--primary-color);
             color: white;
             font-weight: bold;
         }
 
-        .info {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(0,0,0,0.05);
-            border-radius: 5px;
-            font-size: 0.9em;
+        .apply-btn {
+            grid-column: 1 / -1;
+            background: #27ae60;
+            margin-top: 10px;
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <div class="container">
-    <h2>Trình Phân Tích Logic A-b</h2>
+    <h2 style="text-align:center;">Cấu Hình 8 Tổ Hợp Logic</h2>
+
+    <div class="config-grid" id="configGrid">
+        <div class="rule-item"><label>AAA →</label><input type="text" id="rule_AAA" value="AAb" maxlength="3"></div>
+        <div class="rule-item"><label>AAb →</label><input type="text" id="rule_AAb" value="" maxlength="3"></div>
+        <div class="rule-item"><label>AbA →</label><input type="text" id="rule_AbA" value="Abb" maxlength="3"></div>
+        <div class="rule-item"><label>Abb →</label><input type="text" id="rule_Abb" value="" maxlength="3"></div>
+        <div class="rule-item"><label>bAA →</label><input type="text" id="rule_bAA" value="bbb" maxlength="3"></div>
+        <div class="rule-item"><label>bAb →</label><input type="text" id="rule_bAb" value="" maxlength="3"></div>
+        <div class="rule-item"><label>bbA →</label><input type="text" id="rule_bbA" value="" maxlength="3"></div>
+        <div class="rule-item"><label>bbb →</label><input type="text" id="rule_bbb" value="" maxlength="3"></div>
+        
+        <button class="apply-btn" onclick="renderLogic()">Cập Nhật & Lưu Quy Tắc</button>
+    </div>
     
     <div class="controls">
-        <input type="file" id="fileInput" accept=".txt">
-        <button onclick="toggleDarkMode()">Giao diện</button>
+        <input type="file" id="fileInput" accept=".txt" style="background: var(--label-bg); padding: 8px; border-radius: 4px; flex-grow: 1;">
+        <button onclick="toggleDarkMode()" style="background: #7f8c8d;">Sáng/Tối</button>
         <button style="background:#e74c3c" onclick="clearData()">Xóa hết</button>
     </div>
 
@@ -126,24 +174,25 @@
     </div>
     
     <div id="numberGrid"></div>
-
-    <div class="info">
-        <strong>Quy tắc hiện tại:</strong><br>
-        - <b>A</b>: Số lớn hoặc bằng 5 (5,6,7,8,9)<br>
-        - <b>b</b>: Số nhỏ hơn 5 (0,1,2,3,4)<br>
-        - Nếu 3 số trước có 2 <b>A</b> → Hàng sau xếp <b>b-A-A</b><br>
-        - Nếu 3 số trước có 2 <b>b</b> → Hàng sau xếp <b>A-b-b</b><br>
-        - Ô kết quả tự động tô vàng nếu trùng khớp với loại số cùng vị trí.
-    </div>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileInput');
     const numberGrid = document.getElementById('numberGrid');
+    const patterns = ['AAA', 'AAb', 'AbA', 'Abb', 'bAA', 'bAb', 'bbA', 'bbb'];
+    
     let rawNumbers = localStorage.getItem('savedNumbers') || "";
 
     window.onload = () => {
-        if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+        // Load quy tắc từ storage
+        patterns.forEach(p => {
+            const saved = localStorage.getItem('rule_' + p);
+            if (saved) document.getElementById('rule_' + p).value = saved;
+        });
+        
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+
         if (rawNumbers) renderLogic();
     };
 
@@ -159,7 +208,6 @@
         reader.readAsText(file);
     });
 
-    // HÀM KIỂM TRA LOẠI SỐ THEO ĐIỀU KIỆN MỚI
     function getNumType(char) {
         let n = parseInt(char);
         if (isNaN(n)) return null;
@@ -167,6 +215,11 @@
     }
 
     function renderLogic() {
+        // Lưu toàn bộ quy tắc
+        patterns.forEach(p => {
+            localStorage.setItem('rule_' + p, document.getElementById('rule_' + p).value.trim());
+        });
+
         numberGrid.innerHTML = "";
         const fragment = document.createDocumentFragment();
         
@@ -178,7 +231,7 @@
         let nextLabels = ["", "", ""]; 
 
         groups.forEach((group) => {
-            // 1. Ô số liệu thực tế
+            // Hiển thị số thực tế
             for (let i = 0; i < 3; i++) {
                 const div = document.createElement('div');
                 div.className = 'cell';
@@ -186,19 +239,18 @@
                 fragment.appendChild(div);
             }
 
-            // 2. Ngăn cách
+            // Ngăn cách
             const sep = document.createElement('div');
             sep.className = 'separator';
             fragment.appendChild(sep);
 
-            // 3. Ô nhãn dự đoán và tô màu
+            // Hiển thị dự đoán (Kết quả áp dụng từ hàng TRƯỚC)
             for (let i = 0; i < 3; i++) {
                 const div = document.createElement('div');
                 div.className = 'cell label';
                 const labelValue = nextLabels[i];
                 div.textContent = labelValue;
 
-                // Kiểm tra trùng khớp
                 if (labelValue !== "" && group[i]) {
                     if (getNumType(group[i]) === labelValue) {
                         div.classList.add('match-highlight');
@@ -207,33 +259,41 @@
                 fragment.appendChild(div);
             }
 
-            // 4. Tính toán cho hàng kế tiếp
-            let countA = 0;
-            let countB = 0;
-            for (let char of group) {
-                let type = getNumType(char);
-                if (type === 'A') countA++;
-                else if (type === 'b') countB++;
-            }
+            // TÍNH TOÁN CHO HÀNG TIẾP THEO
+            if (group.length === 3) {
+                // Xác định tổ hợp hiện tại (VD: "AbA")
+                let currentPattern = "";
+                for(let char of group) {
+                    currentPattern += getNumType(char);
+                }
 
-            if (countA >= 2) nextLabels = ['b', 'A', 'A'];
-            else if (countB >= 2) nextLabels = ['A', 'b', 'b'];
-            else nextLabels = ["", "", ""];
+                // Lấy quy tắc tương ứng từ ô Input
+                let ruleStr = document.getElementById('rule_' + currentPattern).value.trim();                
+                if (ruleStr.length === 3) {
+                    nextLabels = ruleStr.split('');
+                } else {
+                    nextLabels = ["", "", ""];
+                }
+            } else {
+                nextLabels = ["", "", ""];
+            }
         });
 
         numberGrid.appendChild(fragment);
     }
 
     function toggleDarkMode() {
-        const isDark = document.body.hasAttribute('data-theme');
-        document.body.toggleAttribute('data-theme');
-        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
     }
 
     function clearData() {
-        if (confirm("Xóa toàn bộ dữ liệu?")) {
-            localStorage.clear();
-            location.reload();
+        if (confirm("Xóa dữ liệu cũ?")) {
+            localStorage.removeItem('savedNumbers');
+            rawNumbers = "";
+            renderLogic();
         }
     }
 </script>
