@@ -239,7 +239,7 @@
             }
 
             // Cập nhật giao diện mỗi 20.000 mẫu để cực nhanh
-            if (i % 20000 === 0) {
+            if (i % 300000 === 0) {
                 statusText.textContent = `🚀 Đang quét: ${i.toLocaleString()}...`;
                 await new Promise(r => setTimeout(r, 0));
             }
