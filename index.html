@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Số Hóa Dữ Liệu - Grid View</title>
+    <title>Phân Tích Chuỗi Số A-b</title>
     <style>
         :root {
             --bg-color: #f4f4f9;
@@ -11,6 +11,7 @@
             --container-bg: #ffffff;
             --border-color: #ddd;
             --cell-bg: #fff;
+            --label-bg: #eef2ff;
             --primary-color: #4a90e2;
         }
 
@@ -20,72 +21,53 @@
             --container-bg: #2d2d2d;
             --border-color: #444;
             --cell-bg: #3d3d3d;
+            --label-bg: #2c3e50;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
             padding: 20px;
-            transition: all 0.3s ease;
         }
 
         .container {
-            max-width: 100%;
+            max-width: 600px;
             margin: 0 auto;
             background: var(--container-bg);
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        h2 { text-align: center; margin-top: 0; }
-
         .controls {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 15px;
-            margin-bottom: 25px;
-            padding: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid var(--border-color);
-            align-items: center;
         }
 
-        .control-group { display: flex; align-items: center; gap: 8px; }
-
-        input[type="number"], input[type="file"] {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: var(--cell-bg);
-            color: var(--text-color);
-        }
-
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: var(--primary-color);
-            color: white;
+        .grid-header {
+            display: grid;
+            grid-template-columns: repeat(3, 40px) 20px repeat(3, 40px);
+            gap: 5px;
             font-weight: bold;
-            transition: opacity 0.2s;
+            margin-bottom: 10px;
+            text-align: center;
         }
 
-        button:hover { opacity: 0.8; }
-
-        /* Grid System */
         #numberGrid {
             display: grid;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 20px;
+            grid-template-columns: repeat(3, 40px) 20px repeat(3, 40px);
+            gap: 5px;
+            justify-content: start;
         }
 
         .cell {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -93,105 +75,132 @@
             background: var(--cell-bg);
             border-radius: 4px;
             font-weight: bold;
-            font-size: 1.1em;
         }
 
-        .theme-toggle { margin-left: auto; }
+        .cell.label {
+            background-color: var(--label-bg);
+            color: #e67e22;
+            border-style: dashed;
+        }
+
+        .separator {
+            width: 20px;
+        }
+
+        .btn {
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: var(--primary-color);
+            color: white;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Trình Hiển Thị Số Theo Nhóm</h2>
-
+    <h2>Phân Tích Logic A-b</h2>
+    
     <div class="controls">
-        <div class="control-group">
-            <label>Upload File:</label>
-            <input type="file" id="fileInput" accept=".txt">
-        </div>
-
-        <div class="control-group">
-            <label>Số ô mỗi nhóm:</label>
-            <input type="number" id="groupSize" value="10" min="1" style="width: 60px;">
-        </div>
-
-        <button onclick="clearData()" style="background: #e74c3c;">Xóa dữ liệu</button>
-
-        <div class="theme-toggle">
-            <button onclick="toggleDarkMode()">Chế độ Sáng/Tối</button>
-        </div>
+        <input type="file" id="fileInput" accept=".txt">
+        <button class="btn" onclick="toggleDarkMode()">Đổi màu nền</button>
+        <button class="btn" style="background:#e74c3c" onclick="clearData()">Xóa dữ liệu</button>
     </div>
 
+    <div class="grid-header">
+        <span>Số</span><span></span><span></span>
+        <span></span>
+        <span>Xét</span><span></span><span></span>
+    </div>
     <div id="numberGrid"></div>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileInput');
-    const groupSizeInput = document.getElementById('groupSize');
     const numberGrid = document.getElementById('numberGrid');
-    let rawNumbers = "";
+    let rawNumbers = localStorage.getItem('savedNumbers') || "";
 
-    // 1. Khởi tạo khi load trang
     window.onload = () => {
-        // Load theme
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-        }
-
-        // Load dữ liệu cũ
-        rawNumbers = localStorage.getItem('savedNumbers') || "";
-        const savedSize = localStorage.getItem('savedGroupSize');
-        if (savedSize) groupSizeInput.value = savedSize;
-
-        if (rawNumbers) renderGrid();
+        if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+        if (rawNumbers) renderLogic();
     };
 
-    // 2. Xử lý Upload File
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = (event) => {
-            const content = event.target.result;
-            // Chỉ lấy các chữ số 0-9
-            rawNumbers = content.replace(/\D/g, '');
+            rawNumbers = event.target.result.replace(/\D/g, '');
             localStorage.setItem('savedNumbers', rawNumbers);
-            renderGrid();
+            renderLogic();
         };
         reader.readAsText(file);
     });
 
-    // 3. Xử lý thay đổi số ô mỗi nhóm
-    groupSizeInput.addEventListener('input', () => {
-        localStorage.setItem('savedGroupSize', groupSizeInput.value);
-        renderGrid();
-    });
-
-    // 4. Hàm Render chính
-    function renderGrid() {
+    function renderLogic() {
         numberGrid.innerHTML = "";
-        const size = parseInt(groupSizeInput.value) || 10;
-        
-        // Thiết lập số cột cho Grid
-        numberGrid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
-
         const fragment = document.createDocumentFragment();
         
-        for (let char of rawNumbers) {
-            const div = document.createElement('div');
-            div.className = 'cell';
-            div.textContent = char;
-            fragment.appendChild(div);
+        // Chia nhóm 3 số
+        let groups = [];
+        for (let i = 0; i < rawNumbers.length; i += 3) {
+            groups.push(rawNumbers.substring(i, i + 3));
         }
-        
+
+        let nextLabels = ["", "", ""]; // Nhãn cho hàng hiện tại (tính từ hàng trước)
+
+        groups.forEach((group) => {
+            // 1. Hiển thị 3 số đầu của hàng
+            for (let i = 0; i < 3; i++) {
+                const div = document.createElement('div');
+                div.className = 'cell';
+                div.textContent = group[i] || "-";
+                fragment.appendChild(div);
+            }
+
+            // 2. Ô khoảng cách
+            const sep = document.createElement('div');
+            sep.className = 'separator';
+            fragment.appendChild(sep);
+
+            // 3. Hiển thị 3 nhãn A-b dựa trên kết quả hàng TRƯỚC
+            for (let i = 0; i < 3; i++) {
+                const div = document.createElement('div');
+                div.className = 'cell label';
+                div.textContent = nextLabels[i];
+                fragment.appendChild(div);
+            }
+
+            // 4. TÍNH TOÁN LOGIC CHO HÀNG TIẾP THEO
+            let countA = 0;
+            let countB = 0;
+            
+            // ĐỊNH NGHĨA: Số chẵn là A, Số lẻ là b
+            for (let char of group) {
+                let val = parseInt(char);
+                if (!isNaN(val)) {
+                    if (val % 2 === 0) countA++; // Chẵn = A
+                    else countB++;               // Lẻ = b
+                }
+            }
+
+            // Áp dụng quy tắc của bạn
+            if (countA >= 2) {
+                nextLabels = ['b', 'A', 'A'];
+            } else if (countB >= 2) {
+                nextLabels = ['A', 'b', 'b'];
+            } else {
+                nextLabels = ['', '', ''];
+            }
+        });
+
         numberGrid.appendChild(fragment);
     }
 
-    // 5. Dark Mode
     function toggleDarkMode() {
-        const currentTheme = document.body.getAttribute('data-theme');
-        if (currentTheme === 'dark') {
+        const isDark = document.body.hasAttribute('data-theme');
+        if (isDark) {
             document.body.removeAttribute('data-theme');
             localStorage.setItem('theme', 'light');
         } else {
@@ -200,9 +209,8 @@
         }
     }
 
-    // 6. Xóa dữ liệu
     function clearData() {
-        if (confirm("Bạn có chắc muốn xóa dữ liệu đã lưu?")) {
+        if (confirm("Xóa hết dữ liệu?")) {
             localStorage.removeItem('savedNumbers');
             rawNumbers = "";
             numberGrid.innerHTML = "";
